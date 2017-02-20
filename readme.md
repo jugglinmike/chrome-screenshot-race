@@ -5,16 +5,18 @@ test is requested, [the `wptrunner` tool](https://github.com/w3c/wptrunner)
 performs the following actions:
 
 1. Navigates to the document via the "go" command
-2. Injects a "wait" script via the "execute async script" command
+2. Injects [a "wait"
+   script](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/reftest-wait_webdriver.js)
+   via the "execute async script" command
 3. Captures the state of the screen using the "screenshot" command
 
 ([source](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/executorselenium.py#L253-L264))
 
-Although [the "wait" script in step 2 is authored to defer until the document's
-`readyState` is
-`"ready"`](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/reftest-wait_webdriver.js),
-the delay introduced by the "HTTP command" protocol means that practically
-speaking, this event always occurs prior to the evaluation of the script.
+(Note: Although the "wait" script in step 2 is authored to defer until the
+document's `readyState` is `"ready"`], the delay introduced by the "HTTP
+command" protocol means that practically speaking, this event always occurs
+prior to the evaluation of the script. In other words, the "wait" script always
+signals completion synchronously.)
 
 Despite this, external image resources are not always rendered when the
 screenshot is captured in step 3.
