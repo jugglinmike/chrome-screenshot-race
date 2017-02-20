@@ -1,21 +1,25 @@
 # Race Condition when Running Reference Test in Chrome
 
-When a reference test is requested, the `wptrunner` tool performs the following
-actions:
+When a [Web Platform Test](https://github.com/w3c/web-platform-tests) reference
+test is requested, [the `wptrunner` tool](https://github.com/w3c/wptrunner)
+performs the following actions:
 
 1. Navigates to the document via the "go" command
 2. Injects a "wait" script via the "execute async script" command
 3. Captures the state of the screen using the "screenshot" command
 
-Although the "wait" script in step 2 is authored to defer until the document's
-`readyState` is `"ready"`, the delay introduced by the "HTTP command" protocol
-means that practically speaking, this event always occurs prior to the
-evaluation of the script.
+([source](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/executorselenium.py#L253-L264))
+
+Although [the "wait" script in step 2 is authored to defer until the document's
+`readyState` is
+`"ready"`](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/reftest-wait_webdriver.js),
+the delay introduced by the "HTTP command" protocol means that practically
+speaking, this event always occurs prior to the evaluation of the script.
 
 Despite this, external image resources are not always rendered when the
 screenshot is captured in step 3.
 
-This project demonstrate the problem in a simplified environment.
+This project demonstrates the problem in a simplified environment.
 
 ## To Run
 
@@ -29,10 +33,13 @@ This project demonstrate the problem in a simplified environment.
 
         $ chromedriver --port=4444
 
-3. Run the `main.py` Python script located in the root of this project. The
-   script navigates to the same simple document, capturing a screen shot after
-   each navigation. It halts when any two screenshots do not match, ending by
-   saving the screenshots to a file named `results.html`.
+3. Run the `main.py` Python script located in the root of this project:
+
+        $ python main.py
+
+   The script navigates to the same simple document, capturing a screen shot
+   after each navigation. It halts when any two screenshots do not match,
+   ending by saving the screenshots to a file named `results.html`.
 
 ## Analysis
 
