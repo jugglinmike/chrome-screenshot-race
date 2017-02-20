@@ -13,7 +13,7 @@ performs the following actions:
 ([source](https://github.com/w3c/wptrunner/blob/38435bc6714ae83bbf759b04395fe13f08388396/wptrunner/executors/executorselenium.py#L253-L264))
 
 (Note: Although the "wait" script in step 2 is authored to defer until the
-document's `readyState` is `"ready"`], the delay introduced by the "HTTP
+document's `readyState` is `"ready"`, the delay introduced by the "HTTP
 command" protocol means that practically speaking, this event always occurs
 prior to the evaluation of the script. In other words, the "wait" script always
 signals completion synchronously.)
