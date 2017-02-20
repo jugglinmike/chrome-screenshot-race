@@ -27,9 +27,9 @@ This project demonstrates the problem in a simplified environment.
 
 1. Install the following dependencies:
    - Python 2.7
-   - Install the "requests" Python module
+   - the "requests" Python module
    - Google Chrome
-   - The Chromedriver binary
+   - the Chromedriver binary
 
 2. Run the Chromedriver binary, bound to port 4444:
 
