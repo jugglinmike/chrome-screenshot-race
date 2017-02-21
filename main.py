@@ -32,11 +32,24 @@ def report(count, first_reading, curr_reading, later_reading):
 <p>Captured %s screen shots over %s seconds.</p>
 <table>
   <tr>
-    <td>Initial screen capture<br />document.readyState: %s<br />documentElement.scrollHeight: %s</td>
+    <td>
+      Initial screen capture<br />
+      callback strategy: %s<br />
+      document.readyState: %s<br />
+      documentElement.scrollHeight: %s<br />
+      window.ONLOAD_FIRED: %s<br />
+      [img.naturalWidth, img.naturalHeight]: %s
+    </td>
     <td><img src="data:img/png;base64,%s" /></td>
   </tr>
   <tr>
-    <td>Abberant rendering<br />document.readyState: %s<br />documentElement.scrollHeight: %s</td>
+    <td>Abberant rendering<br />
+      callback strategy: %s<br />
+      document.readyState: %s<br />
+      documentElement.scrollHeight: %s<br />
+      window.ONLOAD_FIRED: %s<br />
+      [img.naturalWidth, img.naturalHeight]: %s
+    </td>
     <td><img src="data:img/png;base64,%s" /></td>
   </tr>
   <tr>
@@ -46,11 +59,17 @@ def report(count, first_reading, curr_reading, later_reading):
 </table>
 ''' % (count,
         curr_reading['time'] - first_reading['time'],
-        first_reading['readyState'],
-        first_reading['scrollHeight'],
+        first_reading['pageState']['callbackStrategy'],
+        first_reading['pageState']['readyState'],
+        first_reading['pageState']['scrollHeight'],
+        first_reading['pageState']['onload_fired'],
+        first_reading['pageState']['natural_dimensions'],
         first_reading['screenshot'],
-        curr_reading['readyState'],
-        curr_reading['scrollHeight'],
+        curr_reading['pageState']['callbackStrategy'],
+        curr_reading['pageState']['readyState'],
+        curr_reading['pageState']['scrollHeight'],
+        curr_reading['pageState']['onload_fired'],
+        curr_reading['pageState']['natural_dimensions'],
         curr_reading['screenshot'],
         later_reading['time'] - curr_reading['time'],
         later_reading['screenshot'])
@@ -61,8 +80,7 @@ def take_reading(session_id):
     result = request('get', 'session/%s/screenshot' % session_id)
 
     return {
-        'readyState': None,
-        'scrollHeight': None,
+        'pageState': None,
         'screenshot': result['value'],
         'time': time.time()
     }
@@ -82,21 +100,27 @@ try:
 
         script = '''
             var callback = arguments[0];
-            function done() {
-              callback([
-                document.readyState, document.documentElement.scrollHeight
-              ]);
+            function done(strategy) {
+              callback({
+                callbackStrategy: strategy,
+                readyState: document.readyState,
+                scrollHeight: document.documentElement.scrollHeight,
+                onload_fired: window.ONLOAD_FIRED,
+                natural_dimensions: [
+                  document.getElementsByTagName('img')[0].naturalWidth,
+                  document.getElementsByTagName('img')[0].naturalHeight
+                ]
+              });
             }
             if (document.readyState === 'complete') {
-              done();
+              done('synchronous');
             } else {
-              onload = done;
+              onload = done.bind(null, 'asynchronous');
             }
         '''
         result = request('post', 'session/%s/execute_async' % session_id, dict(script=script, args=[]))
         curr_reading = take_reading(session_id)
-        curr_reading['readyState'] = result['value'][0]
-        curr_reading['scrollHeight'] = result['value'][1]
+        curr_reading['pageState'] = result['value']
 
         if first_reading is None:
             first_reading = curr_reading

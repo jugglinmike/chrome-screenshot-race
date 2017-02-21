@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <script>
+window.ONLOAD_FIRED = null;
+onload = function() {
+  window.ONLOAD_FIRED = 'the `onload` event fired';
+};
+  </script>
+</head>
 <body style="outline: solid teal 2px;">
   <img src="blue.png" style="border-width:50px; border-style:solid;"/>
 </body>
