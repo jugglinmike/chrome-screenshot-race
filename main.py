@@ -27,50 +27,53 @@ def request(method, uri, data=None):
     return response.json()
 
 def report(count, first_reading, curr_reading, later_reading):
+
+    def row(event_title, reading):
+        return '''
+          <tr>
+            <th>%s</th>
+            <td>
+              <ul>
+                <li>callback strategy: %s</li>
+                <li>document.readyState: %s</li>
+                <li>documentElement.scrollHeight: %s</li>
+                <li>window.ONLOAD_FIRED: %s</li>
+                <li>[img.naturalWidth, img.naturalHeight]: %s</li>
+              </ul>
+            </td>
+            <td><img src="data:img/png;base64,%s" /></td>
+          </tr>''' % (
+            event_title,
+            reading['pageState']['callbackStrategy'],
+            reading['pageState']['readyState'],
+            reading['pageState']['scrollHeight'],
+            reading['pageState']['onload_fired'],
+            reading['pageState']['natural_dimensions'],
+            reading['screenshot']
+        )
+
     document = '''<!DOCTYPE html>
-<style>img { border: solid 1px #555; }</style>
+<style>img { border: solid 1px #555; width: 300px; }</style>
 <p>Captured %s screen shots over %s seconds.</p>
 <table>
-  <tr>
-    <td>
-      Initial screen capture<br />
-      callback strategy: %s<br />
-      document.readyState: %s<br />
-      documentElement.scrollHeight: %s<br />
-      window.ONLOAD_FIRED: %s<br />
-      [img.naturalWidth, img.naturalHeight]: %s
-    </td>
-    <td><img src="data:img/png;base64,%s" /></td>
-  </tr>
-  <tr>
-    <td>Abberant rendering<br />
-      callback strategy: %s<br />
-      document.readyState: %s<br />
-      documentElement.scrollHeight: %s<br />
-      window.ONLOAD_FIRED: %s<br />
-      [img.naturalWidth, img.naturalHeight]: %s
-    </td>
-    <td><img src="data:img/png;base64,%s" /></td>
-  </tr>
-  <tr>
-    <td>Above document, re-captured after %s second delay</td>
-    <td><img src="data:img/png;base64,%s" /></td>
-  </tr>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Page State (prior to screen capture)</th>
+      <th>Screen Capture</th>
+    </tr>
+  </thead>
+  <tbody>
+    %s
+    %s
+  </tbody>
 </table>
+<p>Above document, re-captured after %s second delay:</p>
+<img src="data:img/png;base64,%s" />
 ''' % (count,
         curr_reading['time'] - first_reading['time'],
-        first_reading['pageState']['callbackStrategy'],
-        first_reading['pageState']['readyState'],
-        first_reading['pageState']['scrollHeight'],
-        first_reading['pageState']['onload_fired'],
-        first_reading['pageState']['natural_dimensions'],
-        first_reading['screenshot'],
-        curr_reading['pageState']['callbackStrategy'],
-        curr_reading['pageState']['readyState'],
-        curr_reading['pageState']['scrollHeight'],
-        curr_reading['pageState']['onload_fired'],
-        curr_reading['pageState']['natural_dimensions'],
-        curr_reading['screenshot'],
+        row('Initial rendering', first_reading),
+        row('First aberrant rendering', curr_reading),
         later_reading['time'] - curr_reading['time'],
         later_reading['screenshot'])
 
