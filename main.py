@@ -11,6 +11,7 @@ def server(port):
     httpd.serve_forever()
 
 p = Process(target=server, args=(PORT,))
+p.daemon = True
 p.start()
 
 def request(method, uri, data=None):
