@@ -25,17 +25,22 @@ This project demonstrates the problem in a simplified environment.
 
 ## To Run
 
-1. Install the following dependencies:
+1. Install the following system dependencies:
    - Python 2.7
-   - the "requests" Python module
+   - [The PIP tool](https://pip.pypa.io/en/stable/installing/) for installing
+     Python packages
    - Google Chrome
    - the Chromedriver binary
 
-2. Run the Chromedriver binary, bound to port 4444:
+2. Install the Python dependencies using the following command:
+
+        $ pip install -r requirements.txt
+
+3. Run the Chromedriver binary, bound to port 4444:
 
         $ chromedriver --port=4444
 
-3. Run the `main.py` Python script located in the root of this project:
+4. Run the `main.py` Python script located in the root of this project:
 
         $ python main.py
 
