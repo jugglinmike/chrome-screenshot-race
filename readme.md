@@ -51,7 +51,7 @@ This project demonstrates the problem in a simplified environment.
 ## Analysis
 
 The following images are examples of screenshots captured when running this
-script on an Ubuntu 16.04 x64 system:
+script:
 
 ![initial rendering](examples/initial.png)
 
@@ -70,6 +70,15 @@ Because this behavior is somewhat counter-intuitive, and because this is not
 exhibited by Firefox, I am reaching out to the Chromium development team for
 insight about the internals of the engine and how this indeterminacy might be
 avoided.
+
+## Environment Information
+
+This behavior was observed on a system matching the following description:
+
+- Operating system: Ubuntu 16.04
+- Achitecture: `x86_64`
+- Google Chrome: 58.0.3026.3 (Official Build) dev (64-bit)
+- ChromeDriver: 2.27.440175 (9bc1d90b8bfa4dd181fbbf769a5eb5e575574320)
 
 ## License
 
