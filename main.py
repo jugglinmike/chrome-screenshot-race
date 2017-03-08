@@ -1,18 +1,15 @@
+import argparse
 import logging
 from multiprocessing import Process
 import requests
+import sys
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import SocketServer
 import time
 
-PORT = 8089
 def server(port):
     httpd = SocketServer.TCPServer(('', port), SimpleHTTPRequestHandler)
     httpd.serve_forever()
-
-p = Process(target=server, args=(PORT,))
-p.daemon = True
-p.start()
 
 def request(method, uri, data=None):
     logging.info('  --> %s %s %s' % (method.upper(), uri, data))
@@ -88,53 +85,76 @@ def take_reading(session_id):
         'time': time.time()
     }
 
-session_id = request('post', 'session', dict(desiredCapabilities={}))['sessionId']
+def main(args):
+    p = Process(target=server, args=(args.fileserver_port,))
+    p.daemon = True
+    p.start()
 
-try:
-    request('post', 'session/%s/timeouts/async_script' % session_id, dict(ms=1000))
+    capabilities={"chromeOptions": {}}
+    if args.chrome_binary:
+        capabilities['chromeOptions']['binary'] = args.chrome_binary
 
-    first_reading = None
-    count = 0
+    response = request('post', 'session', dict(desiredCapabilities=capabilities))
+    session_id = response['sessionId']
 
-    while True:
-        count += 1
-        request('post', 'session/%s/url' % session_id, dict(url='about:blank'))
-        request('post', 'session/%s/url' % session_id, dict(url='http://localhost:%s/' % PORT))
+    try:
+        request('post', 'session/%s/timeouts/async_script' % session_id, dict(ms=1000))
 
-        script = '''
-            var callback = arguments[0];
-            function done(strategy) {
-              callback({
-                callbackStrategy: strategy,
-                readyState: document.readyState,
-                scrollHeight: document.documentElement.scrollHeight,
-                onload_fired: window.ONLOAD_FIRED,
-                natural_dimensions: [
-                  document.getElementsByTagName('img')[0].naturalWidth,
-                  document.getElementsByTagName('img')[0].naturalHeight
-                ]
-              });
-            }
-            if (document.readyState === 'complete') {
-              done('synchronous');
-            } else {
-              onload = done.bind(null, 'asynchronous');
-            }
-        '''
-        result = request('post', 'session/%s/execute_async' % session_id, dict(script=script, args=[]))
-        curr_reading = take_reading(session_id)
-        curr_reading['pageState'] = result['value']
+        first_reading = None
+        count = 0
 
-        if first_reading is None:
-            first_reading = curr_reading
-        elif first_reading['screenshot'] != curr_reading['screenshot']:
-            time.sleep(2)
+        while True:
+            if p.exitcode:
+                sys.exit(1)
 
-            later_reading = take_reading(session_id)
-            break
+            count += 1
+            request('post', 'session/%s/url' % session_id, dict(url='about:blank'))
+            request('post', 'session/%s/url' % session_id, dict(url='http://localhost:%s/' % args.fileserver_port))
 
-    with open('results.html', 'w') as f:
-        f.write(report(count, first_reading, curr_reading, later_reading))
+            script = '''
+                var callback = arguments[0];
+                function done(strategy) {
+                  callback({
+                    callbackStrategy: strategy,
+                    readyState: document.readyState,
+                    scrollHeight: document.documentElement.scrollHeight,
+                    onload_fired: window.ONLOAD_FIRED,
+                    natural_dimensions: [
+                      document.getElementsByTagName('img')[0].naturalWidth,
+                      document.getElementsByTagName('img')[0].naturalHeight
+                    ]
+                  });
+                }
+                if (document.readyState === 'complete') {
+                  done('synchronous');
+                } else {
+                  onload = done.bind(null, 'asynchronous');
+                }
+            '''
+            result = request('post', 'session/%s/execute_async' % session_id, dict(script=script, args=[]))
+            curr_reading = take_reading(session_id)
+            curr_reading['pageState'] = result['value']
 
-finally:
-    request('delete', 'session/%s' % session_id)
+            if first_reading is None:
+                first_reading = curr_reading
+            elif first_reading['screenshot'] != curr_reading['screenshot']:
+                time.sleep(2)
+
+                later_reading = take_reading(session_id)
+                break
+
+        with open('results.html', 'w') as f:
+            f.write(report(count, first_reading, curr_reading, later_reading))
+
+    finally:
+        request('delete', 'session/%s' % session_id)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--chrome-binary',
+                        help='Filesystem path to the Chrome/Chromium executable file')
+    parser.add_argument('--fileserver-port',
+                        default=8089,
+                        type=int,
+                        help='Port number to which the requisite file server should be bound')
+    main(parser.parse_args())

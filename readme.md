@@ -48,6 +48,9 @@ This project demonstrates the problem in a simplified environment.
    after each navigation. It halts when any two screenshots do not match,
    ending by saving the screenshots to a file named `results.html`.
 
+   The runtime behavior of the script may be configured through command-line
+   options. Execute the command `python main.py --help` for more information.
+
 ## Analysis
 
 The following images are examples of screenshots captured when running this
